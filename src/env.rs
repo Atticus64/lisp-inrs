@@ -1,11 +1,10 @@
 use crate::object::Object;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Env {
-    parent: Option<Rc<RefCell<Env>>>,
+    parent: Option<Rc<Env>>,
     vars: HashMap<String, Object>,
 }
 
@@ -14,20 +13,13 @@ impl Env {
         Default::default()
     }
 
-    pub fn extend(parent: Rc<RefCell<Self>>) -> Env {
-        Env {
-            vars: HashMap::new(),
-            parent: Some(parent),
-        }
-    }
-
     pub fn get(&self, name: &str) -> Option<Object> {
         match self.vars.get(name) {
             Some(value) => Some(value.clone()),
             None => self
                 .parent
                 .as_ref()
-                .and_then(|o| o.borrow().get(name).clone()),
+                .and_then(|o| o.get(name).clone()),
         }
     }
 

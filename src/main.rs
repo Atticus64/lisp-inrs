@@ -6,14 +6,12 @@ mod eval;
 
 use linefeed::{Interface, ReadResult};
 use object::Object;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 const PROMPT: &str = "lisp-rs> ";
 
 fn repl() -> Result<(), Box<dyn std::error::Error>> {
     let reader = Interface::new(PROMPT).unwrap();
-    let mut env = Rc::new(RefCell::new(env::Env::new()));
+    let mut env = env::Env::new();
 
     reader.set_prompt(PROMPT).as_ref().unwrap();
 
@@ -64,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let contents = std::fs::read_to_string(file)
             .expect("Should have been able to read the file");
 
-        let mut env = Rc::new(RefCell::new(env::Env::new()));
+        let mut env = env::Env::new();
         for line in contents.lines() {
             if line.is_empty() {
                 continue;
