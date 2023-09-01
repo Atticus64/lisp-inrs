@@ -1,6 +1,4 @@
-
-(define r 10)
-(define sqr (lambda (x) (* x x)))
-
-(sqr r)
-
+(define age 50)
+(define old "YoureOld")
+(define young "YoureYoung")
+(if (> age 40)(old)(young))

@@ -25,6 +25,8 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
             "/" => Ok(Object::Integer(left_val / right_val)),
             "^" => Ok(Object::Integer(left_val.pow(right_val as u32))),
             "<" => Ok(Object::Bool(left_val < right_val)),
+            "<=" => Ok(Object::Bool(left_val <= right_val)),
+            ">=" => Ok(Object::Bool(left_val >= right_val)),
             ">" => Ok(Object::Bool(left_val > right_val)),
             "=" => Ok(Object::Bool(left_val == right_val)),
             "!=" => Ok(Object::Bool(left_val != right_val)),
@@ -109,9 +111,17 @@ fn eval_function_call(
             }
             eval_obj(&Object::List(body), &mut new_env)
         }
-        Object::Str(s) => {
+        Object::Str(str) => {
 
-            println!("Var: {}", s);
+            println!("Var {s}: {:?}", str);
+            Ok(Object::Void)
+        },
+        Object::Bool(b) => {
+            println!("Var {s}: {:?}", b);
+            Ok(Object::Void)
+        },
+        Object::Integer(i) => {
+            println!("Var {s}: {:?}", i);
             Ok(Object::Void)
         },
         _ => Err(format!("Not a lambda: {}", s)),
@@ -129,7 +139,7 @@ fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
 
 fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let head = &list[0];
-    let operators = ["+" , "-" , "*" , "/" , "<" , ">" , "=" , "!=" , "^"];
+    let operators = ["+" , "-" , "*" , "/" , "<" , ">" , "=" , "!=" , "^", ">=", "<="];
     match head {
         Object::Symbol(s) => match s.as_str() {
             ref x if operators.contains(x) => {
@@ -259,6 +269,26 @@ mod tests {
         assert_eq!(
             result,
             Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
+        );
+    }
+
+    #[test]
+    fn test_print_correct_str() {
+        let mut env = Env::new();
+        let program = r#"
+            (
+                (define age 50)
+                (define old "YoureOld")
+                (define young "YoureYoung")
+                (define res (lambda (age) (if (>= age 40) old young)))
+                (res 40)
+            )
+        "#;
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Str("YoureOld".to_string())])
         );
     }
 }

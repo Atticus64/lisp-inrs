@@ -53,8 +53,8 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                 if let Ok(integer) = i {
                     tokens.push(Token::Integer(integer));
                 } else if word.contains('\"') {
-                    tokens.push(Token::Str(word.to_string()));
-                    // "este es mi string"
+                    let new_word: String = word.chars().filter(|c| c != &'\"').collect();
+                    tokens.push(Token::Str(new_word.to_string()));
                 } else {
                     tokens.push(Token::Symbol(word.to_string()));
                 }
