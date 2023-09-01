@@ -19,7 +19,14 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
         if input.eq("exit") {
             break;
         }
-        let val = eval::eval(input.as_ref(), &mut env)?;
+        let val = match eval::eval(input.as_ref(), &mut env) {
+            Ok(data) => data,
+            Err(err) => {
+                println!("Error: {}", err);
+                continue;
+            }
+        };
+
         match val {
             Object::Void => {}
             Object::Integer(n) => println!("{}", n),

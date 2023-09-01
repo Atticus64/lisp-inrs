@@ -4,6 +4,7 @@ use std::fmt;
 #[derive(PartialEq, Debug)]
 pub enum Token {
     Integer(i64),
+    Str(String),
     Symbol(String),
     LParen,
     RParen,
@@ -13,6 +14,7 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Token::Integer(n) => write!(f, "{}", n),
+            Token::Str(s) => write!(f, "{}", s),
             Token::Symbol(s) => write!(f, "{}", s),
             Token::RParen => write!(f, "("),
             Token::LParen => write!(f, ")"),
@@ -50,6 +52,9 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
 
                 if let Ok(integer) = i {
                     tokens.push(Token::Integer(integer));
+                } else if word.contains('\"') {
+                    tokens.push(Token::Str(word.to_string()));
+                    // "este es mi string"
                 } else {
                     tokens.push(Token::Symbol(word.to_string()));
                 }

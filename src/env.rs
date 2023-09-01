@@ -19,7 +19,7 @@ impl Env {
             None => self
                 .parent
                 .as_ref()
-                .and_then(|o| o.get(name).clone()),
+                .and_then(|o| o.get(name)),
         }
     }
 

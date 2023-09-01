@@ -109,6 +109,11 @@ fn eval_function_call(
             }
             eval_obj(&Object::List(body), &mut new_env)
         }
+        Object::Str(s) => {
+
+            println!("Var: {}", s);
+            Ok(Object::Void)
+        },
         _ => Err(format!("Not a lambda: {}", s)),
     }
 }
@@ -127,7 +132,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let operators = ["+" , "-" , "*" , "/" , "<" , ">" , "=" , "!=" , "^"];
     match head {
         Object::Symbol(s) => match s.as_str() {
-        ref x if operators.contains(x) => {
+            ref x if operators.contains(x) => {
                 eval_binary_op(list, env)
             },
             "define" => eval_define(list, env),
@@ -156,6 +161,7 @@ fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
         Object::Lambda(_params, _body) => Ok(Object::Void),
         Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
+        Object::Str(s) => Ok(Object::Str(s.clone())),
         Object::Symbol(s) => eval_symbol(s, env),
     }
 }
