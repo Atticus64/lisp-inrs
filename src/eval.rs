@@ -22,12 +22,11 @@ fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
     match operator {
         Object::Symbol(s) => match s.as_str() {
-            "concat" => Ok(Object::Str(left_val +  &right_val)),
+            "concat" => Ok(Object::Str(left_val + &right_val)),
             _ => Err(format!("Invalid infix operator: {}", s)),
-        }
+        },
         _ => Err("Operator must be a symbol".to_string()),
     }
-
 }
 
 fn eval_binary_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
@@ -119,11 +118,7 @@ fn eval_function_definition(list: &[Object]) -> Result<Object, String> {
     Ok(Object::Lambda(params, body))
 }
 
-fn eval_function_call(
-    s: &str,
-    list: &[Object],
-    env: &mut Env,
-) -> Result<Object, String> {
+fn eval_function_call(s: &str, list: &[Object], env: &mut Env) -> Result<Object, String> {
     let lamdba = env.get(s);
     if lamdba.is_none() {
         return Err(format!("Unbound symbol: {}", s));
@@ -140,18 +135,17 @@ fn eval_function_call(
             eval_obj(&Object::List(body), &mut new_env)
         }
         Object::Str(str) => {
-
             println!("Var {s}: {:?}", str);
             Ok(Object::Void)
-        },
+        }
         Object::Bool(b) => {
             println!("Var {s}: {:?}", b);
             Ok(Object::Void)
-        },
+        }
         Object::Integer(i) => {
             println!("Var {s}: {:?}", i);
             Ok(Object::Void)
-        },
+        }
         _ => Err(format!("Not a lambda: {}", s)),
     }
 }
@@ -164,19 +158,14 @@ fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
     Ok(val.unwrap())
 }
 
-
 fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let head = &list[0];
-    let operators = ["+" , "-" , "*" , "/" , "<" , ">" , "=" , "!=" , "^", ">=", "<="];
+    let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<="];
     let str_op = ["concat"];
     match head {
         Object::Symbol(s) => match s.as_str() {
-            ref x if operators.contains(x) => {
-                eval_binary_op(list, env)
-            },
-            ref op if str_op.contains(op) => {
-                eval_string_op(list, env)
-            },
+            ref x if operators.contains(x) => eval_binary_op(list, env),
+            ref op if str_op.contains(op) => eval_string_op(list, env),
             "define" => eval_define(list, env),
             "if" => eval_if(list, env),
             "lambda" => eval_function_definition(list),
@@ -324,16 +313,16 @@ mod tests {
         );
     }
 
-		#[test]
+    #[test]
     fn test_concat_str() {
         let mut env = Env::new();
         let program = r#"
             (
-							(define name "Midnight ")
-							(define phrase "esta fumado 🚬")
-							(concat name phrase)
+                (define name "Midnight ")
+                (define phrase "esta fumado 🚬")
+                (concat name phrase)
             )
-        "#;
+            "#;
 
         let result = eval(program, &mut env).unwrap();
         assert_eq!(

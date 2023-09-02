@@ -2,13 +2,13 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
-    Void, 
-    Integer(i64), 
+    Void,
+    Integer(i64),
     Bool(bool),
     Str(String),
     Symbol(String),
     Lambda(Vec<String>, Vec<Object>),
-    List(Vec<Object>)
+    List(Vec<Object>),
 }
 
 impl fmt::Display for Object {
@@ -38,7 +38,7 @@ impl fmt::Display for Object {
                     if i > 0 {
                         write!(f, " ")?;
                     }
-                    
+
                     write!(f, "{}", obj)?;
                 }
 
@@ -46,8 +46,6 @@ impl fmt::Display for Object {
 
                 Ok(())
             }
-
-        
         }
     }
 }

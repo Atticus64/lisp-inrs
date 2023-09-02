@@ -1,8 +1,8 @@
+mod env;
+mod eval;
 mod lexer;
 mod object;
 mod parser;
-mod env;
-mod eval;
 
 use linefeed::{Interface, ReadResult};
 use object::Object;
@@ -47,7 +47,7 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("Good bye");
- 
+
     Ok(())
 }
 
@@ -59,8 +59,7 @@ fn execute(file: &str) -> Result<(), Box<dyn std::error::Error>> {
         panic!("extension not correct, file not valid");
     }
 
-    let program = std::fs::read_to_string(file)
-        .expect("Should have been able to read the file");
+    let program = std::fs::read_to_string(file).expect("Should have been able to read the file");
 
     let mut env = env::Env::new();
     let result = eval::eval(program.as_str(), &mut env)?;
@@ -68,12 +67,9 @@ fn execute(file: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", result);
 
     Ok(())
-
 }
 
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() == 1 {
@@ -84,5 +80,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
-
 }

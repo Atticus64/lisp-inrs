@@ -1,16 +1,16 @@
-use std::fmt;
 use crate::lexer::*;
 use crate::object::*;
 use std::error::Error;
+use std::fmt;
 
 #[derive(Debug)]
 pub struct ParseError {
-    err: String
+    err: String,
 }
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Parse error: {}", self.err) 
+        write!(f, "Parse error: {}", self.err)
     }
 }
 
@@ -21,8 +21,8 @@ pub fn parse(program: &str) -> Result<Object, ParseError> {
 
     if let Err(error) = token_result {
         return Err(ParseError {
-            err: format!("{}", error)
-        })
+            err: format!("{}", error),
+        });
     }
 
     let mut tokens = token_result.unwrap().into_iter().rev().collect::<Vec<_>>();
@@ -36,7 +36,7 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
 
     if token != Some(Token::LParen) {
         return Err(ParseError {
-            err: format!("Expected LParen, found {:?}", token)
+            err: format!("Expected LParen, found {:?}", token),
         });
     }
 
@@ -46,9 +46,9 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
         let token = tokens.pop();
 
         if token.is_none() {
-            return Err( ParseError {
-                err: "Did not find enough tokens".to_string()
-            })
+            return Err(ParseError {
+                err: "Did not find enough tokens".to_string(),
+            });
         }
 
         let t = token.unwrap();
@@ -58,21 +58,18 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
             Token::Str(s) => list.push(Object::Str(s.to_string())),
             Token::Symbol(s) => list.push(Object::Symbol(s)),
             Token::LParen => {
-            
                 tokens.push(Token::LParen);
                 let sub_list = parse_list(tokens)?;
                 list.push(sub_list);
-            },
+            }
             Token::RParen => {
                 return Ok(Object::List(list));
             }
         }
     }
 
-
     Ok(Object::List(list))
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -83,7 +80,7 @@ mod tests {
         let list = parse("(+ 1 2)").unwrap();
 
         assert_eq!(
-            list, 
+            list,
             Object::List(vec![
                 Object::Symbol("+".to_string()),
                 Object::Integer(1),

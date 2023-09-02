@@ -24,7 +24,7 @@ impl fmt::Display for Token {
 
 #[derive(Debug)]
 pub struct TokenError {
-    ch: char
+    ch: char,
 }
 
 impl Error for TokenError {}
@@ -34,7 +34,6 @@ impl fmt::Display for TokenError {
         write!(f, "unexpected character: {}", self.ch)
     }
 }
-
 
 pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     let program_fmt = program.replace('(', " ( ").replace(')', " ) ");
@@ -47,8 +46,8 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     let mut pos_string = String::new();
     let mut has_quot = false;
     let mut has_spaces = false;
-    if strs.len() >= 2  {
-		let string = strs[1];
+    if strs.len() >= 2 {
+        let string = strs[1];
         if string.contains(' ') {
             has_spaces = true;
         } else {
@@ -72,19 +71,18 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     }
                     if !has_quot {
                         has_quot = true;
-												let w = word.to_string() + " ";
+                        let w = word.to_string() + " ";
                         pos_string.push_str(w.as_str());
-											} else {
+                    } else {
                         pos_string.push_str(word);
                         let new_word: String = pos_string.chars().filter(|c| c != &'\"').collect();
                         tokens.push(Token::Str(new_word));
                         has_quot = false;
                         pos_string = String::new();
                     }
-                   
                 } else {
                     if has_quot {
-												let w = word.to_string() + " ";
+                        let w = word.to_string() + " ";
                         pos_string.push_str(w.as_str());
                         continue;
                     }
@@ -95,14 +93,11 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     }
 
     Ok(tokens)
-
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
 
     #[test]
     fn add() {
@@ -157,4 +152,3 @@ mod tests {
         );
     }
 }
-
