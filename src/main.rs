@@ -13,9 +13,9 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
     let reader = Interface::new(PROMPT).unwrap();
     let mut env = env::Env::new();
 
-    reader.set_prompt(PROMPT).as_ref().unwrap();
+    reader.set_prompt(PROMPT)?;
 
-    while let ReadResult::Input(input) = reader.read_line().unwrap() {
+    while let Ok(ReadResult::Input(input)) = reader.read_line() {
         if input.eq("exit") {
             break;
         }

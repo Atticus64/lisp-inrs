@@ -43,6 +43,18 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
 
     let mut tokens: Vec<Token> = Vec::new();
 
+    let strs: Vec<&str> = program_fmt.split('\"').collect();
+    let mut pos_string = String::new();
+    let mut has_quot = false;
+    let mut has_spaces = false;
+    if strs.len() >= 2  {
+				let string = strs[1];
+        if string.contains(" ") {
+            has_spaces = true;
+        } else {
+            has_spaces = false;
+        }
+    }
     for word in words {
         match word {
             "(" => tokens.push(Token::LParen),
@@ -53,9 +65,29 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                 if let Ok(integer) = i {
                     tokens.push(Token::Integer(integer));
                 } else if word.contains('\"') {
-                    let new_word: String = word.chars().filter(|c| c != &'\"').collect();
-                    tokens.push(Token::Str(new_word.to_string()));
+                    if !has_spaces {
+                        pos_string.push_str(word);
+                        let new_word: String = pos_string.chars().filter(|c| c != &'\"').collect();
+                        tokens.push(Token::Str(new_word));
+                    }
+                    if !has_quot {
+                        has_quot = true;
+												let w = word.to_string() + " ";
+                        pos_string.push_str(w.as_str());
+											} else {
+                        pos_string.push_str(word);
+                        let new_word: String = pos_string.chars().filter(|c| c != &'\"').collect();
+                        tokens.push(Token::Str(new_word));
+                        has_quot = false;
+                        pos_string = String::new();
+                    }
+                   
                 } else {
+                    if has_quot {
+												let w = word.to_string() + " ";
+                        pos_string.push_str(w.as_str());
+                        continue;
+                    }
                     tokens.push(Token::Symbol(word.to_string()));
                 }
             }

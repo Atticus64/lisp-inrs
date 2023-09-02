@@ -2,6 +2,34 @@ use crate::env::*;
 use crate::object::*;
 use crate::parser::*;
 
+fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err("Invalid number of arguments for infix operator".to_string());
+    }
+
+    let operator = list[0].clone();
+    let left = eval_obj(&list[1].clone(), env)?;
+    let right = eval_obj(&list[2].clone(), env)?;
+    let left_val = match left {
+        Object::Str(s) => s,
+        _ => return Err(format!("Left operand must be an string {:?}", left)),
+    };
+
+    let right_val = match right {
+        Object::Str(s) => s,
+        _ => return Err(format!("Right operand must be an string {:?}", right)),
+    };
+
+    match operator {
+        Object::Symbol(s) => match s.as_str() {
+            "concat" => Ok(Object::Str(left_val +  &right_val)),
+            _ => Err(format!("Invalid infix operator: {}", s)),
+        }
+        _ => Err("Operator must be a symbol".to_string()),
+    }
+
+}
+
 fn eval_binary_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err("Invalid number of arguments for infix operator".to_string());
@@ -133,17 +161,21 @@ fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
     if val.is_none() {
         return Err(format!("Unbound symbol: {}", s));
     }
-    Ok(val.unwrap().clone())
+    Ok(val.unwrap())
 }
 
 
 fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let head = &list[0];
     let operators = ["+" , "-" , "*" , "/" , "<" , ">" , "=" , "!=" , "^", ">=", "<="];
+    let str_op = ["concat"];
     match head {
         Object::Symbol(s) => match s.as_str() {
             ref x if operators.contains(x) => {
                 eval_binary_op(list, env)
+            },
+            ref op if str_op.contains(op) => {
+                eval_string_op(list, env)
             },
             "define" => eval_define(list, env),
             "if" => eval_if(list, env),
@@ -278,8 +310,8 @@ mod tests {
         let program = r#"
             (
                 (define age 50)
-                (define old "YoureOld")
-                (define young "YoureYoung")
+                (define old "Youre Old")
+                (define young "Youre Young")
                 (define res (lambda (age) (if (>= age 40) old young)))
                 (res 40)
             )
@@ -288,7 +320,25 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Str("YoureOld".to_string())])
+            Object::List(vec![Object::Str("Youre Old".to_string())])
+        );
+    }
+
+		#[test]
+    fn test_concat_str() {
+        let mut env = Env::new();
+        let program = r#"
+            (
+							(define name "Midnight ")
+							(define phrase "esta fumado 🚬")
+							(concat name phrase)
+            )
+        "#;
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Str("Midnight esta fumado 🚬".to_string())])
         );
     }
 }
