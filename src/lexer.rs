@@ -48,8 +48,8 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     let mut has_quot = false;
     let mut has_spaces = false;
     if strs.len() >= 2  {
-				let string = strs[1];
-        if string.contains(" ") {
+		let string = strs[1];
+        if string.contains(' ') {
             has_spaces = true;
         } else {
             has_spaces = false;

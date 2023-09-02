@@ -51,6 +51,27 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn execute(file: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let parts = file.split('.').collect::<Vec<&str>>();
+    let ext = parts.get(1).expect("Filename not correctly").to_string();
+
+    if ext != "lisp" && ext != "cl" {
+        panic!("extension not correct, file not valid");
+    }
+
+    let program = std::fs::read_to_string(file)
+        .expect("Should have been able to read the file");
+
+    let mut env = env::Env::new();
+    let result = eval::eval(program.as_str(), &mut env)?;
+
+    println!("{}", result);
+
+    Ok(())
+
+}
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args: Vec<String> = std::env::args().collect();
@@ -59,40 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         repl()?;
     } else if args.len() >= 2 {
         let file = &args[1];
-        let parts = file.split('.').collect::<Vec<&str>>();
-        let ext = parts.get(1).expect("Filename not correctly").to_string();
-
-        if ext != "lisp" && ext != "cl" {
-            panic!("extension not correct, file not valid");
-        }
-
-        let contents = std::fs::read_to_string(file)
-            .expect("Should have been able to read the file");
-
-        let mut env = env::Env::new();
-        for line in contents.lines() {
-            if line.is_empty() {
-                continue;
-            }
-            let val = eval::eval(line, &mut env)?;
-            match val {
-                Object::Void => {}
-                Object::Integer(n) => println!("{}", n),
-                Object::Bool(b) => println!("{}", b),
-                Object::Symbol(s) => println!("{}", s),
-                Object::Lambda(params, body) => {
-                    println!("Lambda(");
-                    for param in params {
-                        println!("{} ", param);
-                    }
-                    println!(")");
-                    for expr in body {
-                        println!(" {}", expr);
-                    }
-                }
-                _ => println!("{}", val),
-            }
-        }
+        execute(file)?;
     }
 
     Ok(())
