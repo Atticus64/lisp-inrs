@@ -2,6 +2,12 @@ use crate::env::*;
 use crate::object::*;
 use crate::parser::*;
 
+#[derive(Debug)]
+enum Number {
+    Float(f64),
+    Integer(i64),
+}
+
 fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err("Invalid number of arguments for infix operator".to_string());
@@ -12,11 +18,17 @@ fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let right = eval_obj(&list[2].clone(), env)?;
     let left_val = match left {
         Object::Str(s) => s,
+        Object::Integer(i) => i.to_string(),
+        Object::Float(f) => f.to_string(),
+        Object::Bool(b) => b.to_string(),
         _ => return Err(format!("Left operand must be an string {:?}", left)),
     };
 
     let right_val = match right {
         Object::Str(s) => s,
+        Object::Integer(i) => i.to_string(),
+        Object::Bool(b) => b.to_string(),
+        Object::Float(f) => f.to_string(),
         _ => return Err(format!("Right operand must be an string {:?}", right)),
     };
 
@@ -29,6 +41,72 @@ fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     }
 }
 
+fn num_operations(operator: Object, numbers: (Number, Number)) -> Result<Object, String> {
+    let (left, right) = numbers;
+
+    match operator {
+        Object::Symbol(s) => {
+            if let Number::Float(l) = left {
+                let r = match right {
+                    Number::Float(g) => g,
+                    Number::Integer(i) => i as f64,
+                };
+
+                match s.as_str() {
+                    "+" => Ok(Object::Float(l + r)),
+                    "-" => Ok(Object::Float(l - r)),
+                    "*" => Ok(Object::Float(l * r)),
+                    "/" => Ok(Object::Float(l / r)),
+                    ">" => Ok(Object::Bool(l > r)),
+                    "<" => Ok(Object::Bool(l < r)),
+                    "==" => Ok(Object::Bool(l == r)),
+                    ">=" => Ok(Object::Bool(l >= r)),
+                    "<=" => Ok(Object::Bool(l <= r)),
+                    "^" => Ok(Object::Float(l.powf(r))),
+                    _ => Err(format!("Invalid infix operator: {}", s)),
+                }
+            } else if let Number::Integer(l) = left {
+                let r = match right {
+                    Number::Float(r) => {
+                        let l = l as f64;
+                        return match s.as_str() {
+                            "+" => Ok(Object::Float(l + r)),
+                            "-" => Ok(Object::Float(l - r)),
+                            "*" => Ok(Object::Float(l * r)),
+                            "/" => Ok(Object::Float(l / r)),
+                            "==" => Ok(Object::Bool(l == r)),
+                            ">" => Ok(Object::Bool(l > r)),
+                            "<" => Ok(Object::Bool(l < r)),
+                            ">=" => Ok(Object::Bool(l >= r)),
+                            "<=" => Ok(Object::Bool(l <= r)),
+                            "^" => Ok(Object::Float(l.powf(r))),
+                            _ => Err(format!("Invalid infix operator: {}", s)),
+                        };
+                    }
+                    Number::Integer(i) => i,
+                };
+
+                match s.as_str() {
+                    "+" => Ok(Object::Integer(l + r)),
+                    "-" => Ok(Object::Integer(l - r)),
+                    "*" => Ok(Object::Integer(l * r)),
+                    "/" => Ok(Object::Integer(l / r)),
+                    ">" => Ok(Object::Bool(l > r)),
+                    "<" => Ok(Object::Bool(l < r)),
+                    "==" => Ok(Object::Bool(l == r)),
+                    ">=" => Ok(Object::Bool(l >= r)),
+                    "<=" => Ok(Object::Bool(l <= r)),
+                    "^" => Ok(Object::Integer(l.pow(r as u32))),
+                    _ => Err(format!("Invalid infix operator: {}", s)),
+                }
+            } else {
+                Err(format!("Left operand must be a number {:?}", left))
+            }
+        }
+        _ => Err("Operator must be a symbol".to_string()),
+    }
+}
+
 fn eval_binary_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err("Invalid number of arguments for infix operator".to_string());
@@ -36,30 +114,27 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let operator = list[0].clone();
     let left = eval_obj(&list[1].clone(), env)?;
     let right = eval_obj(&list[2].clone(), env)?;
-    let left_val = match left {
-        Object::Integer(n) => n,
-        _ => return Err(format!("Left operand must be an integer {:?}", left)),
-    };
-    let right_val = match right {
-        Object::Integer(n) => n,
-        _ => return Err(format!("Right operand must be an integer {:?}", right)),
-    };
-    match operator {
-        Object::Symbol(s) => match s.as_str() {
-            "+" => Ok(Object::Integer(left_val + right_val)),
-            "-" => Ok(Object::Integer(left_val - right_val)),
-            "*" => Ok(Object::Integer(left_val * right_val)),
-            "/" => Ok(Object::Integer(left_val / right_val)),
-            "^" => Ok(Object::Integer(left_val.pow(right_val as u32))),
-            "<" => Ok(Object::Bool(left_val < right_val)),
-            "<=" => Ok(Object::Bool(left_val <= right_val)),
-            ">=" => Ok(Object::Bool(left_val >= right_val)),
-            ">" => Ok(Object::Bool(left_val > right_val)),
-            "=" => Ok(Object::Bool(left_val == right_val)),
-            "!=" => Ok(Object::Bool(left_val != right_val)),
-            _ => Err(format!("Invalid infix operator: {}", s)),
-        },
-        _ => Err("Operator must be a symbol".to_string()),
+
+    if let Object::Float(f) = left {
+        let r = match right {
+            Object::Float(g) => Number::Float(g),
+            Object::Integer(i) => Number::Integer(i),
+            _ => return Err(format!("Right operand must be a number {:?}", right)),
+        };
+
+        return num_operations(operator, (Number::Float(f), r));
+    }
+
+    if let Object::Integer(f) = left {
+        let r = match right {
+            Object::Float(i) => Number::Float(i),
+            Object::Integer(i) => Number::Integer(i),
+            _ => return Err(format!("Right operand must be a number {:?}", right)),
+        };
+
+        num_operations(operator, (Number::Integer(f), r))
+    } else {
+        Err("Operands must be a numbers".to_string())
     }
 }
 
@@ -146,6 +221,10 @@ fn eval_function_call(s: &str, list: &[Object], env: &mut Env) -> Result<Object,
             println!("Var {s}: {:?}", i);
             Ok(Object::Void)
         }
+        Object::Float(f) => {
+            println!("Var {s}: {:?}", f);
+            Ok(Object::Void)
+        }
         _ => Err(format!("Not a lambda: {}", s)),
     }
 }
@@ -192,6 +271,7 @@ fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
         Object::Lambda(_params, _body) => Ok(Object::Void),
         Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
+        Object::Float(f) => Ok(Object::Float(*f)),
         Object::Str(s) => Ok(Object::Str(s.clone())),
         Object::Symbol(s) => eval_symbol(s, env),
     }

@@ -15,10 +15,19 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
 
     reader.set_prompt(PROMPT)?;
 
-    while let Ok(ReadResult::Input(input)) = reader.read_line() {
+    loop {
+        let raw_input = reader.read_line()?;
+
+        let input = match raw_input {
+            ReadResult::Input(input) => input,
+            ReadResult::Signal(_) => break,
+            _ => break,
+        };
+
         if input.eq("exit") {
             break;
         }
+
         let val = match eval::eval(input.as_ref(), &mut env) {
             Ok(data) => data,
             Err(err) => {

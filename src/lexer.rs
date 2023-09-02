@@ -4,6 +4,7 @@ use std::fmt;
 #[derive(PartialEq, Debug)]
 pub enum Token {
     Integer(i64),
+    Float(f64),
     Str(String),
     Symbol(String),
     LParen,
@@ -14,6 +15,7 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Token::Integer(n) => write!(f, "{}", n),
+            Token::Float(n) => write!(f, "{}", n),
             Token::Str(s) => write!(f, "{}", s),
             Token::Symbol(s) => write!(f, "{}", s),
             Token::RParen => write!(f, "("),
@@ -48,11 +50,7 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     let mut has_spaces = false;
     if strs.len() >= 2 {
         let string = strs[1];
-        if string.contains(' ') {
-            has_spaces = true;
-        } else {
-            has_spaces = false;
-        }
+        has_spaces = string.contains(' ') || strs[0].contains(' ');
     }
     for word in words {
         match word {
@@ -60,9 +58,12 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             ")" => tokens.push(Token::RParen),
             _ => {
                 let i = word.parse::<i64>();
+                let f = word.parse::<f64>();
 
                 if let Ok(integer) = i {
                     tokens.push(Token::Integer(integer));
+                } else if let Ok(float) = f {
+                    tokens.push(Token::Float(float));
                 } else if word.contains('\"') {
                     if !has_spaces {
                         pos_string.push_str(word);
@@ -87,10 +88,12 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                         continue;
                     }
                     tokens.push(Token::Symbol(word.to_string()));
+                    pos_string = "".to_string();
                 }
             }
         }
     }
+    println!("Tokens: {:?}", tokens);
 
     Ok(tokens)
 }
