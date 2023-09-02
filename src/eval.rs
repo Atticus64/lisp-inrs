@@ -237,6 +237,57 @@ fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
     Ok(val.unwrap())
 }
 
+fn eval_load(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    if list.len() == 1 {
+        return Err("Invalid number of arguments for load".to_string());
+    }
+
+    let obj = list[1].clone();
+
+    let mut file = match obj {
+        Object::Str(s) => s,
+        Object::Symbol(sym) => {
+            let val = env.get(&sym);
+            if val.is_none() {
+                return Err(format!("Unbound symbol: {}", sym));
+            }
+            match val.unwrap() {
+                Object::Str(s) => s,
+                _ => return Err("Load arg must be a String".to_string()),
+            }
+        }
+        _ => return Err("Load argument must be a String or Symbol to String".to_string()),
+    };
+
+    let ext = match file.split('.').last() {
+        Some(s) => s,
+        _ => "",
+    };
+
+    if ext != "lisp" && ext != "cl" && file.contains('.') {
+        return Err(format!("Invalid file extension: {}", ext));
+    }
+
+    if ext != "cl" && ext != "lisp" {
+        file = file.to_string() + ".lisp";
+    }
+
+    let data = match std::fs::read_to_string(&file) {
+        Ok(s) => s,
+        Err(_) => {
+            return Err(format!("Module {} not found", file));
+        }
+    };
+
+    let parsed_list = parse(&data);
+    let ls = match parsed_list {
+        Ok(list) => list,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(eval_obj(&ls, env).unwrap())
+}
+
 fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let head = &list[0];
     let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<="];
@@ -246,6 +297,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
             ref x if operators.contains(x) => eval_binary_op(list, env),
             ref op if str_op.contains(op) => eval_string_op(list, env),
             "define" => eval_define(list, env),
+            "load" => eval_load(list, env),
             "if" => eval_if(list, env),
             "lambda" => eval_function_definition(list),
             _ => eval_function_call(s, list, env),

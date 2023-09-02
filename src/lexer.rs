@@ -50,7 +50,7 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     let mut has_spaces = false;
     if strs.len() >= 2 {
         let string = strs[1];
-        has_spaces = string.contains(' ') || strs[0].contains(' ');
+        has_spaces = string.contains(' ');
     }
     for word in words {
         match word {
@@ -93,7 +93,6 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             }
         }
     }
-    println!("Tokens: {:?}", tokens);
 
     Ok(tokens)
 }
