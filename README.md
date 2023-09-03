@@ -5,21 +5,21 @@
 ## Features ☕
 
 * Various Data Types
-    * String `"Jona"` [X]
-    * Integer `10` [X]
-    * Float `3.1416` [X]
-    * Lambda `(lambda (x) (+ x 1))` [X]
-    * Boolean `true` [X]
+    * [X] String `"Jona"` 
+    * [X] Integer `10`
+    * [X] Float `3.1416` 
+    * [X] Lambda `(lambda (x) (+ x 1))` 
+    * [X] Boolean `true` 
 
 * Built-in Functions
-    * `+` Add [X]
-    * `-` Subtract [X]
-    * `*` Multiply [X]
-    * `/` Divide [X]
-    * `^` Pow [X]
-    * `define` For define variables and functions [X]
-    * `load` For loading files [X]
-    * `print` For Debugging [X]
+    * [X] `+` Add 
+    * [X] `-` Subtract 
+    * [X] `*` Multiply 
+    * [X] `/` Divide 
+    * [X] `^` Pow 
+    * [X] `define` For define variables and functions 
+    * [X] `load` For loading files 
+    * [X] `print` For Debugging 
 
 
 ### Examples
