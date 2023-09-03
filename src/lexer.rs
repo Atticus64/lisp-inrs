@@ -42,7 +42,7 @@ fn paren_validation(input: &str) -> bool {
     let left = chars.iter().filter(|c| **c == '(').count();
     let right = chars.iter().filter(|c| **c == ')').count();
 
-    left != right
+    left == right
 }
 
 pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
