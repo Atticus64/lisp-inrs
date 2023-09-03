@@ -41,6 +41,42 @@ fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     }
 }
 
+fn get_float_op(op: &str, numbers: (f64, f64)) -> Result<Object, String> {
+    let (l, r) = numbers;
+
+    match op {
+        "+" => Ok(Object::Float(l + r)),
+        "-" => Ok(Object::Float(l - r)),
+        "*" => Ok(Object::Float(l * r)),
+        "/" => Ok(Object::Float(l / r)),
+        ">" => Ok(Object::Bool(l > r)),
+        "<" => Ok(Object::Bool(l < r)),
+        "==" => Ok(Object::Bool(l == r)),
+        ">=" => Ok(Object::Bool(l >= r)),
+        "<=" => Ok(Object::Bool(l <= r)),
+        "^" => Ok(Object::Float(l.powf(r))),
+        _ => Err(format!("Invalid infix operator: {}", op)),
+    }
+}
+
+fn get_int_op(op: &str, numbers: (i64, i64)) -> Result<Object, String> {
+    let (l, r) = numbers;
+
+    match op {
+        "+" => Ok(Object::Integer(l + r)),
+        "-" => Ok(Object::Integer(l - r)),
+        "*" => Ok(Object::Integer(l * r)),
+        "/" => Ok(Object::Integer(l / r)),
+        ">" => Ok(Object::Bool(l > r)),
+        "<" => Ok(Object::Bool(l < r)),
+        "==" => Ok(Object::Bool(l == r)),
+        ">=" => Ok(Object::Bool(l >= r)),
+        "<=" => Ok(Object::Bool(l <= r)),
+        "^" => Ok(Object::Integer(l.pow(r as u32))),
+        _ => Err(format!("Invalid infix operator: {}", op)),
+    }
+}
+
 fn num_operations(operator: Object, numbers: (Number, Number)) -> Result<Object, String> {
     let (left, right) = numbers;
 
@@ -52,53 +88,17 @@ fn num_operations(operator: Object, numbers: (Number, Number)) -> Result<Object,
                     Number::Integer(i) => i as f64,
                 };
 
-                match s.as_str() {
-                    "+" => Ok(Object::Float(l + r)),
-                    "-" => Ok(Object::Float(l - r)),
-                    "*" => Ok(Object::Float(l * r)),
-                    "/" => Ok(Object::Float(l / r)),
-                    ">" => Ok(Object::Bool(l > r)),
-                    "<" => Ok(Object::Bool(l < r)),
-                    "==" => Ok(Object::Bool(l == r)),
-                    ">=" => Ok(Object::Bool(l >= r)),
-                    "<=" => Ok(Object::Bool(l <= r)),
-                    "^" => Ok(Object::Float(l.powf(r))),
-                    _ => Err(format!("Invalid infix operator: {}", s)),
-                }
+                return get_float_op(s.as_str(), (l, r));
             } else if let Number::Integer(l) = left {
                 let r = match right {
                     Number::Float(r) => {
-                        let l = l as f64;
-                        return match s.as_str() {
-                            "+" => Ok(Object::Float(l + r)),
-                            "-" => Ok(Object::Float(l - r)),
-                            "*" => Ok(Object::Float(l * r)),
-                            "/" => Ok(Object::Float(l / r)),
-                            "==" => Ok(Object::Bool(l == r)),
-                            ">" => Ok(Object::Bool(l > r)),
-                            "<" => Ok(Object::Bool(l < r)),
-                            ">=" => Ok(Object::Bool(l >= r)),
-                            "<=" => Ok(Object::Bool(l <= r)),
-                            "^" => Ok(Object::Float(l.powf(r))),
-                            _ => Err(format!("Invalid infix operator: {}", s)),
-                        };
+                        let left = l as f64;
+                        return get_float_op(s.as_str(), (left, r));
                     }
                     Number::Integer(i) => i,
                 };
 
-                match s.as_str() {
-                    "+" => Ok(Object::Integer(l + r)),
-                    "-" => Ok(Object::Integer(l - r)),
-                    "*" => Ok(Object::Integer(l * r)),
-                    "/" => Ok(Object::Integer(l / r)),
-                    ">" => Ok(Object::Bool(l > r)),
-                    "<" => Ok(Object::Bool(l < r)),
-                    "==" => Ok(Object::Bool(l == r)),
-                    ">=" => Ok(Object::Bool(l >= r)),
-                    "<=" => Ok(Object::Bool(l <= r)),
-                    "^" => Ok(Object::Integer(l.pow(r as u32))),
-                    _ => Err(format!("Invalid infix operator: {}", s)),
-                }
+                return get_int_op(s.as_str(), (l, r));
             } else {
                 Err(format!("Left operand must be a number {:?}", left))
             }
