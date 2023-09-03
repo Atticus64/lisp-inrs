@@ -37,7 +37,21 @@ impl fmt::Display for TokenError {
     }
 }
 
+fn paren_validation(input: &str) -> bool {
+    let chars: Vec<char> = input.chars().filter(|c| *c == '(' || *c == ')').collect();
+    let left = chars.iter().filter(|c| **c == '(').count();
+    let right = chars.iter().filter(|c| **c == ')').count();
+
+    left == right
+}
+
 pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
+    if !paren_validation(program) {
+        return Err(TokenError {
+            ch: ')',
+        })
+    }
+
     let program_fmt = program.replace('(', " ( ").replace(')', " ) ");
 
     let words = program_fmt.split_whitespace();
@@ -152,5 +166,20 @@ mod tests {
                 Token::RParen
             ]
         );
+    }
+
+    #[test]
+    fn paren_error() {
+
+        let program = "(
+            (define r 10)
+            (print r
+        )";
+        let tokens = tokenize(program).unwrap_or(vec![]);
+        let list = tokenize(program);
+
+        assert_eq!(tokens, vec![]);
+        assert!(list.is_err());
+
     }
 }

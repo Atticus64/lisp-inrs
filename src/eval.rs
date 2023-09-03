@@ -345,6 +345,10 @@ fn eval_load(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 }
 
 fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    if list.is_empty() {
+        return Ok(Object::Void)
+    }
+
     let head = &list[0];
     let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<="];
     let str_op = ["concat"];
