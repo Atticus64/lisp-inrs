@@ -9,7 +9,6 @@ use object::Object;
 
 const PROMPT: &str = "lisp-rs> ";
 
-
 fn repl() -> Result<(), Box<dyn std::error::Error>> {
     let reader = Interface::new(PROMPT).unwrap();
     let mut env = env::Env::new();
@@ -116,7 +115,6 @@ fn execute(file: &str) -> Result<(), Box<dyn std::error::Error>> {
             _ => println!("{}", val),
         }
     }
-
 
     Ok(())
 }

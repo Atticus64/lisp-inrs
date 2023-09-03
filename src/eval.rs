@@ -250,7 +250,7 @@ fn get_type(obj: &Object) -> String {
     }
 }
 
-fn eval_print(list:&Vec<Object>, env: &mut Env) -> Result<Object, String> {
+fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() == 1 {
         return Err("Invalid number of arguments for print".to_string());
     }
@@ -290,7 +290,6 @@ fn eval_print(list:&Vec<Object>, env: &mut Env) -> Result<Object, String> {
         }
         _ => Err("Invalid print argument".to_string()),
     }
-
 }
 
 fn eval_load(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
@@ -346,7 +345,7 @@ fn eval_load(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
 fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.is_empty() {
-        return Ok(Object::Void)
+        return Ok(Object::Void);
     }
 
     let head = &list[0];

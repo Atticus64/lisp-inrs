@@ -47,9 +47,7 @@ fn paren_validation(input: &str) -> bool {
 
 pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     if !paren_validation(program) {
-        return Err(TokenError {
-            ch: ')',
-        })
+        return Err(TokenError { ch: ')' });
     }
 
     let program_fmt = program.replace('(', " ( ").replace(')', " ) ");
@@ -170,7 +168,6 @@ mod tests {
 
     #[test]
     fn paren_error() {
-
         let program = "(
             (define r 10)
             (print r
@@ -180,6 +177,5 @@ mod tests {
 
         assert_eq!(tokens, vec![]);
         assert!(list.is_err());
-
     }
 }
