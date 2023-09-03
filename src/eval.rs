@@ -210,19 +210,19 @@ fn eval_function_call(s: &str, list: &[Object], env: &mut Env) -> Result<Object,
             eval_obj(&Object::List(body), &mut new_env)
         }
         Object::Str(str) => {
-            println!("Var {s}: {:?}", str);
+            println!("{}", str);
             Ok(Object::Void)
         }
         Object::Bool(b) => {
-            println!("Var {s}: {:?}", b);
+            println!("{}", b);
             Ok(Object::Void)
         }
         Object::Integer(i) => {
-            println!("Var {s}: {:?}", i);
+            println!("{}", i);
             Ok(Object::Void)
         }
         Object::Float(f) => {
-            println!("Var {s}: {:?}", f);
+            println!("{}", f);
             Ok(Object::Void)
         }
         _ => Err(format!("Not a lambda: {}", s)),
@@ -235,6 +235,62 @@ fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
         return Err(format!("Unbound symbol: {}", s));
     }
     Ok(val.unwrap())
+}
+
+fn get_type(obj: &Object) -> String {
+    match obj {
+        Object::List(_) => "List".to_string(),
+        Object::Symbol(_) => "Symbol".to_string(),
+        Object::Lambda(_, _) => "Lambda".to_string(),
+        Object::Str(_) => "Str".to_string(),
+        Object::Bool(_) => "Bool".to_string(),
+        Object::Integer(_) => "Integer".to_string(),
+        Object::Float(_) => "Float".to_string(),
+        Object::Void => "Void".to_string(),
+    }
+}
+
+fn eval_print(list:&Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    if list.len() == 1 {
+        return Err("Invalid number of arguments for print".to_string());
+    }
+
+    let obj = list[1].clone();
+    match obj {
+        Object::Symbol(s) => {
+            let val = env.get(&s);
+            if val.is_none() {
+                return Err(format!("Unbound symbol: {}", s));
+            }
+            let val = val.unwrap();
+            let t = get_type(&val);
+
+            println!("Type: {t}, Var {s}: {}", val);
+            Ok(Object::Void)
+        }
+        Object::Lambda(_, _) => {
+            println!("{}", obj);
+            Ok(Object::Void)
+        }
+        Object::Str(str) => {
+            println!("Str: {}", str);
+            Ok(Object::Void)
+        }
+        Object::Bool(b) => {
+            println!("Bool: {}", b);
+            Ok(Object::Void)
+        }
+        Object::Integer(i) => {
+            println!("Int: {}", i);
+            Ok(Object::Void)
+        }
+        Object::Float(f) => {
+            println!("Float: {}", f);
+            Ok(Object::Void)
+        }
+        _ => Err("Invalid print argument".to_string()),
+    }
+
 }
 
 fn eval_load(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
@@ -298,6 +354,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
             ref op if str_op.contains(op) => eval_string_op(list, env),
             "define" => eval_define(list, env),
             "load" => eval_load(list, env),
+            "print" => eval_print(list, env),
             "if" => eval_if(list, env),
             "lambda" => eval_function_definition(list),
             _ => eval_function_call(s, list, env),

@@ -9,6 +9,7 @@ use object::Object;
 
 const PROMPT: &str = "lisp-rs> ";
 
+
 fn repl() -> Result<(), Box<dyn std::error::Error>> {
     let reader = Interface::new(PROMPT).unwrap();
     let mut env = env::Env::new();
@@ -24,8 +25,18 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
             _ => break,
         };
 
-        if input.eq("exit") {
+        if input.eq("exit") || input.eq("q") {
             break;
+        }
+
+        if input.eq("") {
+            continue;
+        }
+
+        if input.eq("clean") {
+            env = env::Env::new();
+            println!("Env cleaned 🗑️");
+            continue;
         }
 
         let val = match eval::eval(input.as_ref(), &mut env) {
@@ -41,6 +52,7 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
             Object::Integer(n) => println!("{}", n),
             Object::Bool(b) => println!("{}", b),
             Object::Symbol(s) => println!("{}", s),
+            Object::Str(s) => println!("{}", s),
             Object::Lambda(params, body) => {
                 println!("Lambda(");
                 for param in params {
@@ -71,9 +83,40 @@ fn execute(file: &str) -> Result<(), Box<dyn std::error::Error>> {
     let program = std::fs::read_to_string(file).expect("Should have been able to read the file");
 
     let mut env = env::Env::new();
-    let result = eval::eval(program.as_str(), &mut env)?;
 
-    println!("{}", result);
+    for line in program.lines() {
+        if line.is_empty() {
+            continue;
+        }
+
+        let val = match eval::eval(line, &mut env) {
+            Ok(data) => data,
+            Err(err) => {
+                println!("Error: {}", err);
+                continue;
+            }
+        };
+
+        match val {
+            Object::Void => {}
+            Object::Integer(n) => println!("{}", n),
+            Object::Bool(b) => println!("{}", b),
+            Object::Symbol(s) => println!("{}", s),
+            Object::Str(s) => println!("{}", s),
+            Object::Lambda(params, body) => {
+                println!("Lambda(");
+                for param in params {
+                    println!("{} ", param);
+                }
+                println!(")");
+                for expr in body {
+                    println!(" {}", expr);
+                }
+            }
+            _ => println!("{}", val),
+        }
+    }
+
 
     Ok(())
 }
