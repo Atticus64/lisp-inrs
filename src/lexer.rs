@@ -53,12 +53,14 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
     let program_fmt = program.replace('(', " ( ").replace(')', " ) ");
 
     let mut tokens: Vec<Token> = Vec::new();
+    let chars: Vec<char> = program_fmt.chars().collect();
     let mut build_str = false;
+    let mut build_num = false;
     let mut pos_num = String::new();
     let mut pos_str = String::new();
     let mut pos_sym = String::new();
 
-    for c in program_fmt.chars() {
+    for (i, c) in program_fmt.chars().enumerate() {
         match c {
             '(' => tokens.push(Token::LParen),
             ')' => tokens.push(Token::RParen),
@@ -70,10 +72,12 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     if let Ok(integer) = i {
                         tokens.push(Token::Integer(integer));
                         pos_num = "".to_string();
+                        build_num = false;
                         continue;
                     } else if let Ok(float) = f {
                         tokens.push(Token::Float(float));
                         pos_num = "".to_string();
+                        build_num = false;
                         continue;
                     }
 
@@ -85,8 +89,10 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
-                if c.is_numeric() {
+                if c.is_numeric() && !build_str {
                     pos_num.push(c);
+                    build_num = true;
+                    build_str = false;
                     continue;
                 }
 
@@ -107,8 +113,19 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
-                if c.is_ascii() {
+                if c.is_ascii() && !build_num || c == '+' && c == '-' {
+                    if let Some(next) = chars.get(i + 1) {
+                        if next == &' ' {
+                            pos_sym.push(c);
+                            continue;
+                        } else if next.is_numeric() {
+                            pos_num.push(c);
+                            continue;
+                        }
+                    }
                     pos_sym.push(c);
+                } else if c == '.' {
+                    pos_num.push(c);
                 }
             }
         }

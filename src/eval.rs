@@ -522,4 +522,37 @@ mod tests {
             Object::List(vec![Object::Str("Midnight esta fumado 🚬".to_string())])
         );
     }
+
+    #[test]
+    fn float_operations() {
+        let mut env = Env::new();
+
+        let program = r#"
+            (
+                (define PI 3.1416)
+                (define r 3)
+                (define area (lambda (r) (* PI (* r r))))
+                (area r)
+            )"#;
+
+        let result = eval(program, &mut env).unwrap();
+
+        assert_eq!(result, Object::List(vec![Object::Float(28.2744)]));
+    }
+
+    #[test]
+    fn negative_operations() {
+        let mut env = Env::new();
+
+        let program = r#"
+            (
+                (define debt -4000)
+                (define money 6000)
+                (+ money debt)
+            )"#;
+
+        let result = eval(program, &mut env).unwrap();
+
+        assert_eq!(result, Object::List(vec![Object::Integer(2000)]));
+    }
 }
