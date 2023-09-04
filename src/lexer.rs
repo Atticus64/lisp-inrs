@@ -52,55 +52,63 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
 
     let program_fmt = program.replace('(', " ( ").replace(')', " ) ");
 
-    let words = program_fmt.split_whitespace();
-
     let mut tokens: Vec<Token> = Vec::new();
+    let mut build_str = false;
+    let mut pos_num = String::new();
+    let mut pos_str = String::new();
+    let mut pos_sym = String::new();
 
-    let strs: Vec<&str> = program_fmt.split('\"').collect();
-    let mut pos_string = String::new();
-    let mut has_quot = false;
-    let mut has_spaces = false;
-    if strs.len() >= 2 {
-        let string = strs[1];
-        has_spaces = string.contains(' ');
-    }
-    for word in words {
-        match word {
-            "(" => tokens.push(Token::LParen),
-            ")" => tokens.push(Token::RParen),
+    for c in program_fmt.chars() {
+        match c {
+            '(' => tokens.push(Token::LParen),
+            ')' => tokens.push(Token::RParen),
             _ => {
-                let i = word.parse::<i64>();
-                let f = word.parse::<f64>();
+                if c.is_whitespace() && !build_str {
+                    let i = pos_num.parse::<i64>();
+                    let f = pos_num.parse::<f64>();
 
-                if let Ok(integer) = i {
-                    tokens.push(Token::Integer(integer));
-                } else if let Ok(float) = f {
-                    tokens.push(Token::Float(float));
-                } else if word.contains('\"') {
-                    if !has_spaces {
-                        pos_string.push_str(word);
-                        let new_word: String = pos_string.chars().filter(|c| c != &'\"').collect();
-                        tokens.push(Token::Str(new_word));
-                    }
-                    if !has_quot {
-                        has_quot = true;
-                        let w = word.to_string() + " ";
-                        pos_string.push_str(w.as_str());
-                    } else {
-                        pos_string.push_str(word);
-                        let new_word: String = pos_string.chars().filter(|c| c != &'\"').collect();
-                        tokens.push(Token::Str(new_word));
-                        has_quot = false;
-                        pos_string = String::new();
-                    }
-                } else {
-                    if has_quot {
-                        let w = word.to_string() + " ";
-                        pos_string.push_str(w.as_str());
+                    if let Ok(integer) = i {
+                        tokens.push(Token::Integer(integer));
+                        pos_num = "".to_string();
+                        continue;
+                    } else if let Ok(float) = f {
+                        tokens.push(Token::Float(float));
+                        pos_num = "".to_string();
                         continue;
                     }
-                    tokens.push(Token::Symbol(word.to_string()));
-                    pos_string = "".to_string();
+
+                    if !pos_sym.is_empty() {
+                        tokens.push(Token::Symbol(pos_sym.to_string()));
+                        pos_sym = "".to_string();
+                    }
+
+                    continue;
+                }
+
+                if c.is_numeric() {
+                    pos_num.push(c);
+                    continue;
+                }
+
+                if build_str {
+                    if c == '"' {
+                        tokens.push(Token::Str(pos_str.to_string()));
+                        pos_str = "".to_string();
+                        build_str = false;
+                        continue;
+                    }
+
+                    pos_str.push(c);
+                    continue;
+                }
+
+                if c == '"' {
+                    build_str = true;
+                    continue;
+                }
+
+                if c.is_ascii() {
+                    pos_sym.push(c);
                 }
             }
         }
@@ -177,5 +185,63 @@ mod tests {
 
         assert_eq!(tokens, vec![]);
         assert!(list.is_err());
+    }
+
+    #[test]
+    fn string_tokens() {
+        let program = r#"
+                (concat "hola" "mundo")
+        "#;
+        let tokens = tokenize(program).unwrap_or(vec![]);
+        assert_eq!(
+            tokens,
+            vec![
+                Token::LParen,
+                Token::Symbol("concat".to_string()),
+                Token::Str("hola".to_string()),
+                Token::Str("mundo".to_string()),
+                Token::RParen
+            ]
+        );
+    }
+
+    #[test]
+    fn string_with_spaces() {
+        let program = r#"
+                (concat "hola " " a todos!")
+        "#;
+
+        let tokens = tokenize(program).unwrap_or(vec![]);
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::LParen,
+                Token::Symbol("concat".to_string()),
+                Token::Str("hola ".to_string()),
+                Token::Str(" a todos!".to_string()),
+                Token::RParen
+            ]
+        );
+    }
+
+    #[test]
+    fn string_with_spaces_revenge() {
+        let program = r#"
+                (concat "hola" " a todos! ")
+        "#;
+
+        let tokens = tokenize(program).unwrap_or(vec![]);
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::LParen,
+                Token::Symbol("concat".to_string()),
+                Token::Str("hola".to_string()),
+                Token::Str(" a todos! ".to_string()),
+                Token::RParen
+            ]
+        );
     }
 }
