@@ -83,39 +83,7 @@ fn execute(file: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut env = env::Env::new();
 
-    for line in program.lines() {
-        if line.is_empty() {
-            continue;
-        }
-
-        let val = match eval::eval(line, &mut env) {
-            Ok(data) => data,
-            Err(err) => {
-                println!("Error: {}", err);
-                continue;
-            }
-        };
-
-        match val {
-            Object::Void => {}
-            Object::Integer(n) => println!("{}", n),
-            Object::Bool(b) => println!("{}", b),
-            Object::Symbol(s) => println!("{}", s),
-            Object::Str(s) => println!("{}", s),
-            Object::Lambda(params, body) => {
-                println!("Lambda(");
-                for param in params {
-                    println!("{} ", param);
-                }
-                println!(")");
-                for expr in body {
-                    println!(" {}", expr);
-                }
-            }
-            _ => println!("{}", val),
-        }
-    }
-
+    eval::eval(program.as_ref(), &mut env)?;
     Ok(())
 }
 
