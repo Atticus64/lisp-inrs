@@ -343,6 +343,17 @@ fn eval_load(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     Ok(eval_obj(&ls, env).unwrap())
 }
 
+fn eval_keyword(kw: &str, list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    match kw {
+        "define" => eval_define(list, env),
+        "load" => eval_load(list, env),
+        "print" => eval_print(list, env),
+        "if" => eval_if(list, env),
+        "lambda" => eval_function_definition(list),
+        _ => Err(format!("Invalid keyword: {}", kw)),
+    }
+}
+
 fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.is_empty() {
         return Ok(Object::Void);
@@ -350,16 +361,13 @@ fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
     let head = &list[0];
     let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<="];
+    let keywords = ["define", "load", "print", "if", "lambda"];
     let str_op = ["concat"];
     match head {
         Object::Symbol(s) => match s.as_str() {
-            ref x if operators.contains(x) => eval_binary_op(list, env),
+            ref oper if operators.contains(oper) => eval_binary_op(list, env),
             ref op if str_op.contains(op) => eval_string_op(list, env),
-            "define" => eval_define(list, env),
-            "load" => eval_load(list, env),
-            "print" => eval_print(list, env),
-            "if" => eval_if(list, env),
-            "lambda" => eval_function_definition(list),
+            ref kw if keywords.contains(kw) => eval_keyword(kw, list, env),
             _ => eval_function_call(s, list, env),
         },
         _ => {

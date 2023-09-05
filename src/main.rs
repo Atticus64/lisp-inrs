@@ -62,7 +62,23 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
                     println!(" {}", expr);
                 }
             }
-            _ => println!("{}", val),
+            _ => {
+                if let Object::List(list) = val {
+                    if list.len() == 1 {
+                        println!("{}", list[0]);
+                        continue;
+                    }
+                    for (i, expr) in list.iter().enumerate() {
+                        if i == list.len() - 1 {
+                            println!("{}", expr);
+                        } else {
+                            print!("{}, ", expr);
+                        }
+                    }
+                } else {
+                    println!("val: {:?}", val);
+                }
+            }
         }
     }
 
