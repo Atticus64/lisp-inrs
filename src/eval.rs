@@ -288,6 +288,11 @@ fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
             println!("Float: {}", f);
             Ok(Object::Void)
         }
+        Object::List(l) => {
+            let obj = eval_list(&l, env)?;
+            println!("{}", obj);
+            Ok(Object::Void)
+        }
         _ => Err("Invalid print argument".to_string()),
     }
 }
