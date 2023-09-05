@@ -451,7 +451,7 @@ mod tests {
     }
 
     #[test]
-    fn test_fibonaci() {
+    fn test_fibonacci() {
         let mut env = Env::new();
         let program = "
             (
