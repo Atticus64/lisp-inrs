@@ -405,14 +405,12 @@ fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
     let head = &list[0];
     let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<="];
-    let keywords = ["define", "load", "print", "if", "lambda", "equal"];
     let str_op = ["concat"];
     match head {
         Object::Keyword(k) => eval_keyword(k, list, env),
         Object::Symbol(s) => match s.as_str() {
             ref oper if operators.contains(oper) => eval_binary_op(list, env),
             ref op if str_op.contains(op) => eval_string_op(list, env),
-            ref kw if keywords.contains(kw) => eval_keyword(kw, list, env),
             _ => eval_function_call(s, list, env),
         },
         _ => {
