@@ -8,6 +8,9 @@ pub struct Env {
     vars: HashMap<String, Object>,
 }
 
+pub const KEYWORDS: [&str; 8]  = ["if", "define", "true", "false", "lambda", "print", "equal", "load"];
+
+/// TODO: Document this thing
 impl Env {
     pub fn new() -> Self {
         Default::default()

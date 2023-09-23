@@ -13,6 +13,9 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
     let reader = Interface::new(PROMPT).unwrap();
     let mut env = env::Env::new();
 
+    env.set("true", Object::Bool(true));
+    env.set("false", Object::Bool(false));
+
     reader.set_prompt(PROMPT)?;
 
     loop {

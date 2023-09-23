@@ -1,3 +1,4 @@
+use crate::env::KEYWORDS;
 use crate::lexer::*;
 use crate::object::*;
 use std::error::Error;
@@ -57,7 +58,16 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
             Token::Integer(n) => list.push(Object::Integer(n)),
             Token::Float(n) => list.push(Object::Float(n)),
             Token::Str(s) => list.push(Object::Str(s.to_string())),
-            Token::Symbol(s) => list.push(Object::Symbol(s)),
+            Token::Symbol(s) => {
+
+                if KEYWORDS.contains(&s.as_str()) {
+                    list.push(Object::Keyword(s.to_string()));
+                    continue;
+                }
+
+
+                list.push(Object::Symbol(s));
+            }
             Token::LParen => {
                 tokens.push(Token::LParen);
                 let sub_list = parse_list(tokens)?;
@@ -84,6 +94,21 @@ mod tests {
             list,
             Object::List(vec![
                 Object::Symbol("+".to_string()),
+                Object::Integer(1),
+                Object::Integer(2),
+            ])
+        )
+    }
+
+    #[test]
+    fn test_keyword_equal() {
+
+        let list = parse("(equal 1 2)").unwrap();
+
+        assert_eq!(
+            list,
+            Object::List(vec![
+                Object::Keyword("equal".to_string()),
                 Object::Integer(1),
                 Object::Integer(2),
             ])

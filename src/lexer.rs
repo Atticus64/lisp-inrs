@@ -26,20 +26,26 @@ impl fmt::Display for Token {
 
 #[derive(Debug)]
 pub struct TokenError {
-    ch: char,
+    ch: char
 }
 
 impl Error for TokenError {}
 
 impl fmt::Display for TokenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "unexpected character: {}", self.ch)
+        write!(f, "expected character: {}", self.ch)
     }
 }
 
+/// Validate the correct position of the parens `()`
+///
+/// ```lisp
+/// (concat "hola" ("mundo")
+/// // should throw error
+/// ```
 fn paren_validation(input: &str) -> bool {
     let chars: Vec<char> = input.chars().filter(|c| *c == '(' || *c == ')').collect();
-    let left = chars.iter().filter(|c| **c == '(').count();
+    let left  = chars.iter().filter(|c| **c == '(').count();
     let right = chars.iter().filter(|c| **c == ')').count();
 
     left == right
@@ -89,7 +95,13 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
-                if c.is_numeric() && !build_str {
+
+                if c.is_numeric() && !pos_sym.is_empty() {
+                    pos_sym.push(c);
+                    continue;
+                }
+
+                if c.is_numeric() && !build_str && pos_sym.is_empty() {
                     pos_num.push(c);
                     build_num = true;
                     build_str = false;
@@ -113,7 +125,14 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
+
                 if c.is_ascii() && !build_num || c == '+' && c == '-' {
+
+                    if c != '+' && c != '-' {
+                        pos_sym.push(c);
+                        continue;
+                    }
+
                     if let Some(next) = chars.get(i + 1) {
                         if next == &' ' {
                             pos_sym.push(c);
@@ -130,6 +149,7 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             }
         }
     }
+
 
     Ok(tokens)
 }

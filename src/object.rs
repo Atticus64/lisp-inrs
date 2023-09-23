@@ -5,6 +5,7 @@ pub enum Object {
     Void,
     Integer(i64),
     Float(f64),
+    Keyword(String),
     Bool(bool),
     Str(String),
     Symbol(String),
@@ -19,6 +20,7 @@ impl fmt::Display for Object {
             Object::Integer(n) => write!(f, "{}", n),
             Object::Float(n) => write!(f, "{}", n),
             Object::Str(s) => write!(f, "{}", s),
+            Object::Keyword(s) => write!(f, "Keyword: {}", s),
             Object::Bool(b) => write!(f, "{}", b),
             Object::Symbol(s) => write!(f, "{}", s),
             Object::Lambda(params, body) => {

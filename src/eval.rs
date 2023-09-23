@@ -9,6 +9,7 @@ enum Number {
 }
 
 fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+
     if list.len() != 3 {
         return Err("Invalid number of arguments for infix operator".to_string());
     }
@@ -111,6 +112,7 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err("Invalid number of arguments for infix operator".to_string());
     }
+
     let operator = list[0].clone();
     let left = eval_obj(&list[1].clone(), env)?;
     let right = eval_obj(&list[2].clone(), env)?;
@@ -145,6 +147,7 @@ fn eval_define(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
     let sym = match &list[1] {
         Object::Symbol(s) => s.clone(),
+        Object::Keyword(k) => return Err(format!("Cannot define the keyword `{}`", k)),
         _ => return Err("Invalid define".to_string()),
     };
     let val = eval_obj(&list[2], env)?;
@@ -204,7 +207,11 @@ fn eval_function_call(s: &str, list: &[Object], env: &mut Env) -> Result<Object,
         Object::Lambda(params, body) => {
             let mut new_env = env.clone();
             for (i, param) in params.iter().enumerate() {
-                let val = eval_obj(&list[i + 1], env)?;
+                let arg = match list.get(i + 1) {
+                    Some(a) => a,
+                    None => return Err(format!("Invalid number of arguments for lambda: {}", s)),
+                };
+                let val = eval_obj(arg, env)?;
                 new_env.set(param, val);
             }
             eval_obj(&Object::List(body), &mut new_env)
@@ -239,6 +246,7 @@ fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
 
 fn get_type(obj: &Object) -> String {
     match obj {
+        Object::Keyword(_) => "Keyword".to_string(),
         Object::List(_) => "List".to_string(),
         Object::Symbol(_) => "Symbol".to_string(),
         Object::Lambda(_, _) => "Lambda".to_string(),
@@ -257,6 +265,10 @@ fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
     let obj = list[1].clone();
     match obj {
+        Object::Keyword(k) => {
+            println!("Keyword: {}", k);
+            Ok(Object::Void)
+        },
         Object::Symbol(s) => {
             let val = env.get(&s);
             if val.is_none() {
@@ -348,6 +360,17 @@ fn eval_load(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     Ok(eval_obj(&ls, env).unwrap())
 }
 
+fn eval_equal(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err("Invalid number of arguments for equal".to_string());
+    }
+
+    let left = eval_obj(&list[1], env)?;
+    let right = eval_obj(&list[2], env)?;
+
+    Ok(Object::Bool(left == right))
+}
+
 fn eval_keyword(kw: &str, list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     match kw {
         "define" => eval_define(list, env),
@@ -355,6 +378,7 @@ fn eval_keyword(kw: &str, list: &Vec<Object>, env: &mut Env) -> Result<Object, S
         "print" => eval_print(list, env),
         "if" => eval_if(list, env),
         "lambda" => eval_function_definition(list),
+        "equal" => eval_equal(list, env),
         _ => Err(format!("Invalid keyword: {}", kw)),
     }
 }
@@ -366,9 +390,10 @@ fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
     let head = &list[0];
     let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<="];
-    let keywords = ["define", "load", "print", "if", "lambda"];
+    let keywords = ["define", "load", "print", "if", "lambda", "equal"];
     let str_op = ["concat"];
     match head {
+        Object::Keyword(k) => eval_keyword(k, list, env),
         Object::Symbol(s) => match s.as_str() {
             ref oper if operators.contains(oper) => eval_binary_op(list, env),
             ref op if str_op.contains(op) => eval_string_op(list, env),
@@ -393,6 +418,7 @@ fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
     match obj {
         Object::List(list) => eval_list(list, env),
         Object::Void => Ok(Object::Void),
+        Object::Keyword(k) => Ok(Object::Keyword(k.clone())),
         Object::Lambda(_params, _body) => Ok(Object::Void),
         Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
@@ -567,5 +593,21 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
 
         assert_eq!(result, Object::List(vec![Object::Integer(2000)]));
+    }
+
+    #[test]
+    fn equal_keyword() {
+        let mut env = Env::new();
+
+        let program = r#"
+            (
+                (define age 20)
+                (equal age 29)
+            )
+        "#;
+
+        let result = eval(program, &mut env).unwrap();
+
+        assert_eq!(result, Object::List(vec![Object::Bool(false)]));
     }
 }
