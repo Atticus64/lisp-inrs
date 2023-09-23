@@ -258,6 +258,20 @@ fn get_type(obj: &Object) -> String {
     }
 }
 
+
+fn get_doc(k: String) -> String {
+
+    match k.as_str() {
+        "if" => "Conditional if".to_string(),
+        "define" => "Define a symbol".to_string(),
+        "lambda" => "define a Lambda function".to_string(),
+        "equal" => "Check if two values are equal".to_string(),
+        "print" => "Print a value".to_string(),
+        "load" => "Load a file".to_string(),
+        _ => "".to_string(),
+    }
+}
+
 fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() == 1 {
         return Err("Invalid number of arguments for print".to_string());
@@ -266,7 +280,8 @@ fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let obj = list[1].clone();
     match obj {
         Object::Keyword(k) => {
-            println!("Keyword: {}", k);
+            let explanation = get_doc(k);
+            println!("{}", explanation);
             Ok(Object::Void)
         },
         Object::Symbol(s) => {
