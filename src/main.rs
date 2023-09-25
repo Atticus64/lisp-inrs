@@ -13,13 +13,11 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
     let reader = Interface::new(PROMPT).unwrap();
     let mut env = env::Env::new();
 
-    env.set("true", Object::Bool(true));
-    env.set("false", Object::Bool(false));
-
     reader.set_prompt(PROMPT)?;
 
     loop {
         let raw_input = reader.read_line()?;
+
 
         let input = match raw_input {
             ReadResult::Input(input) => input,
@@ -34,6 +32,8 @@ fn repl() -> Result<(), Box<dyn std::error::Error>> {
         if input.eq("") {
             continue;
         }
+
+        reader.add_history_unique(input.to_string());
 
         if input.eq("clean") {
             env = env::Env::new();
@@ -102,7 +102,20 @@ fn execute(file: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut env = env::Env::new();
 
-    eval::eval(program.as_ref(), &mut env)?;
+    let result = eval::eval(program.as_ref(), &mut env)?;
+    if let Object::List(l) = result {
+        if l.len() == 1 {
+            println!("{}", l[0]);
+        } else {
+            for (i, expr) in l.iter().enumerate() {
+                if i == l.len() - 1 {
+                    println!("{}", expr);
+                } else {
+                    print!("{}, ", expr);
+                }
+            }
+        }
+    };
     Ok(())
 }
 

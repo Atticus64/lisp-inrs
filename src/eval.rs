@@ -9,7 +9,6 @@ enum Number {
 }
 
 fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
-
     if list.len() != 3 {
         return Err("Invalid number of arguments for infix operator".to_string());
     }
@@ -163,6 +162,33 @@ fn eval_if(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let cond_obj = eval_obj(&list[1], env)?;
     let cond = match cond_obj {
         Object::Bool(b) => b,
+        Object::List(l) => {
+            let val = eval_list(&l, env)?;
+
+            match val {
+                Object::Bool(b) => b,
+                Object::Symbol(s) => {
+                    if let Some(Object::Bool(b)) = env.get(&s) {
+                        b
+                    } else {
+                        return Err(format!("Unbound variable: {}", s));
+                    }
+                }
+                _ => return Err("Var must be a boolean".to_string()),
+            }
+        }
+        Object::Symbol(s) => {
+            let value = env.get(&s);
+
+            if let Some(val) = value {
+                match val {
+                    Object::Bool(b) => b,
+                    _ => return Err("Variable need to be a boolean".to_string()),
+                }
+            } else {
+                return Err(format!("Unbound variable: {}", s));
+            }
+        }
         _ => return Err("Condition must be a boolean".to_string()),
     };
 
@@ -216,22 +242,12 @@ fn eval_function_call(s: &str, list: &[Object], env: &mut Env) -> Result<Object,
             }
             eval_obj(&Object::List(body), &mut new_env)
         }
-        Object::Str(str) => {
-            println!("{}", str);
-            Ok(Object::Void)
-        }
-        Object::Bool(b) => {
-            println!("{}", b);
-            Ok(Object::Void)
-        }
-        Object::Integer(i) => {
-            println!("{}", i);
-            Ok(Object::Void)
-        }
-        Object::Float(f) => {
-            println!("{}", f);
-            Ok(Object::Void)
-        }
+        Object::Str(str) => Ok(Object::Str(str)),
+        Object::Bool(b) => Ok(Object::Bool(b)),
+        Object::Integer(i) => Ok(Object::Integer(i)),
+        Object::Float(f) => Ok(Object::Float(f)),
+        Object::List(l) => eval_list(&l, env),
+        Object::Keyword(k) => eval_keyword(k.as_str(), &Vec::from(list), env),
         _ => Err(format!("Not a lambda: {}", s)),
     }
 }
@@ -258,13 +274,14 @@ fn get_type(obj: &Object) -> String {
     }
 }
 
-
 fn get_doc(k: String) -> String {
-
     match k.as_str() {
         "if" => "Conditional if".to_string(),
         "define" => "Define a symbol".to_string(),
         "lambda" => "define a Lambda function".to_string(),
+        "true" => "Boolean value true".to_string(),
+        "false" => "Boolean value false".to_string(),
+        "debug" => "Print debug info".to_string(),
         "equal" => "Check if two values are equal".to_string(),
         "print" => "Print a value".to_string(),
         "load" => "Load a file".to_string(),
@@ -272,7 +289,81 @@ fn get_doc(k: String) -> String {
     }
 }
 
+fn get_debug_info(k: String) -> String {
+    match k.as_str() {
+        "if" => r#"
+if (condition) (true) (false)
+
+Example: 
+(if (age == 1) "Is one" "Is not one")
+        "#.to_string(),
+        "define" => r#"
+define (symbol) (value)
+
+Example:
+(define age 1)
+        "#.to_string(),
+        "lambda" => r#"
+lambda (params) (body)
+
+Example:
+(lambda (a b) (+ a b))
+        "#.to_string(),
+        "true" => "Boolean value true".to_string(),
+        "false" => "Boolean value false".to_string(),
+        "debug" => r#"
+Print debug info
+
+Example:
+(debug age) 
+        "#.to_string(),  
+        "equal" => r#"
+Check if two values are equal
+
+Example:
+(equal 1 1) // true
+        "#.to_string(),
+        "print" => r#"
+Print a value
+Example:
+(print age) //1
+        "#.to_string(),
+        _ => "".to_string(),
+    }
+}
 fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    if list.len() == 1 {
+        return Err("Invalid number of arguments for print".to_string());
+    }
+
+    let obj = list[1].clone();
+
+    match obj {
+        Object::Keyword(k) => {
+            let explanation = get_doc(k);
+            println!("{}", explanation);
+        }
+        Object::List(l) => {
+            let val = eval_list(&l, env)?;
+
+            println!("{}", val);
+        }
+        Object::Symbol(s) => {
+            let val = env.get(&s);
+            if val.is_none() {
+                return Err(format!("Unbound symbol: {}", s));
+            }
+            let val = val.unwrap();
+            println!("{}", val);
+        }
+        _ => {
+            println!("{}", obj);
+        }
+    }
+    Ok(Object::Void)
+}
+
+fn eval_debug(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() == 1 {
         return Err("Invalid number of arguments for print".to_string());
     }
@@ -280,10 +371,10 @@ fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let obj = list[1].clone();
     match obj {
         Object::Keyword(k) => {
-            let explanation = get_doc(k);
+            let explanation = get_debug_info(k);
             println!("{}", explanation);
             Ok(Object::Void)
-        },
+        }
         Object::Symbol(s) => {
             let val = env.get(&s);
             if val.is_none() {
@@ -296,7 +387,7 @@ fn eval_print(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
             Ok(Object::Void)
         }
         Object::Lambda(_, _) => {
-            println!("{}", obj);
+            println!("{:?}", obj);
             Ok(Object::Void)
         }
         Object::Str(str) => {
@@ -391,14 +482,17 @@ fn eval_keyword(kw: &str, list: &Vec<Object>, env: &mut Env) -> Result<Object, S
         "define" => eval_define(list, env),
         "load" => eval_load(list, env),
         "print" => eval_print(list, env),
+        "debug" => eval_debug(list, env),
         "if" => eval_if(list, env),
         "lambda" => eval_function_definition(list),
         "equal" => eval_equal(list, env),
+        "true" => Ok(Object::Bool(true)),
+        "false" => Ok(Object::Bool(false)),
         _ => Err(format!("Invalid keyword: {}", kw)),
     }
 }
 
-fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+pub fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.is_empty() {
         return Ok(Object::Void);
     }
@@ -446,6 +540,7 @@ pub fn eval(program: &str, env: &mut Env) -> Result<Object, String> {
     if parsed_list.is_err() {
         return Err(format!("{}", parsed_list.err().unwrap()));
     }
+
     eval_obj(&parsed_list.unwrap(), env)
 }
 
@@ -622,5 +717,24 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
 
         assert_eq!(result, Object::List(vec![Object::Bool(false)]));
+    }
+
+    #[test]
+    fn bool_variable() {
+        let mut env = Env::new();
+
+        let program = r#"
+            (
+                (define isCool true)
+                (if (isCool) "yeah it's so cool" "It's boring")
+            )
+        "#;
+
+        let result = eval(program, &mut env).unwrap();
+
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Str("yeah it's so cool".to_string())])
+        );
     }
 }

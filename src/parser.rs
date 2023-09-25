@@ -59,12 +59,10 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
             Token::Float(n) => list.push(Object::Float(n)),
             Token::Str(s) => list.push(Object::Str(s.to_string())),
             Token::Symbol(s) => {
-
                 if KEYWORDS.contains(&s.as_str()) {
                     list.push(Object::Keyword(s.to_string()));
                     continue;
                 }
-
 
                 list.push(Object::Symbol(s));
             }
@@ -102,7 +100,6 @@ mod tests {
 
     #[test]
     fn test_keyword_equal() {
-
         let list = parse("(equal 1 2)").unwrap();
 
         assert_eq!(

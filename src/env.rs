@@ -8,7 +8,9 @@ pub struct Env {
     vars: HashMap<String, Object>,
 }
 
-pub const KEYWORDS: [&str; 6]  = ["if", "define", "lambda", "print", "equal", "load"];
+pub const KEYWORDS: [&str; 9] = [
+    "if", "define", "lambda", "print", "debug", "equal", "load", "true", "false",
+];
 
 /// TODO: Document this thing
 impl Env {

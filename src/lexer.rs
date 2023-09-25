@@ -26,7 +26,7 @@ impl fmt::Display for Token {
 
 #[derive(Debug)]
 pub struct TokenError {
-    ch: char
+    ch: char,
 }
 
 impl Error for TokenError {}
@@ -45,7 +45,7 @@ impl fmt::Display for TokenError {
 /// ```
 fn paren_validation(input: &str) -> bool {
     let chars: Vec<char> = input.chars().filter(|c| *c == '(' || *c == ')').collect();
-    let left  = chars.iter().filter(|c| **c == '(').count();
+    let left = chars.iter().filter(|c| **c == '(').count();
     let right = chars.iter().filter(|c| **c == ')').count();
 
     left == right
@@ -95,7 +95,6 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
-
                 if c.is_numeric() && !pos_sym.is_empty() {
                     pos_sym.push(c);
                     continue;
@@ -125,9 +124,7 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
-
                 if c.is_ascii() && !build_num || c == '+' && c == '-' {
-
                     if c != '+' && c != '-' {
                         pos_sym.push(c);
                         continue;
@@ -149,7 +146,6 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             }
         }
     }
-
 
     Ok(tokens)
 }
