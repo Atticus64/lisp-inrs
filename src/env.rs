@@ -13,7 +13,7 @@ pub const KEYWORDS: [&str; 9] = [
 ];
 
 /// TODO: Document this thing
-impl Env {
+impl Env{
     pub fn new() -> Self {
         Default::default()
     }
@@ -23,6 +23,7 @@ impl Env {
             Some(value) => Some(value.clone()),
             None => self.parent.as_ref().and_then(|o| o.get(name)),
         }
+
     }
 
     pub fn set(&mut self, name: &str, val: Object) {

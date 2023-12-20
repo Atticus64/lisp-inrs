@@ -1,12 +1,30 @@
 use std::fmt;
 
+/// Object in Lisp
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     Void,
+    /// Int type of lisp
+    /// ```rs
+    /// let n1 = Object::Integer(10);
+    /// ```
     Integer(i64),
+    /// Float type of lisp
+    /// ```rs
+    /// let pi = Object::Float(3.1416);
+    /// ```
     Float(f64),
     Keyword(String),
+    /// Boolean type of lisp
+    /// ```rs
+    /// let is_empty = Object::Bool(true);
+    /// ```
     Bool(bool),
+    /// String type of lisp
+    /// ```rs
+    /// let n = String::from("John Connor");
+    /// let name = Object::Str(n);
+    /// ```
     Str(String),
     Symbol(String),
     Lambda(Vec<String>, Vec<Object>),

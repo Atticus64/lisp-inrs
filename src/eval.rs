@@ -11,7 +11,7 @@ enum Number {
 fn eval_string_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err("Invalid number of arguments for infix operator".to_string());
-    }
+    } 
 
     let operator = list[0].clone();
     let left = eval_obj(&list[1].clone(), env)?;
@@ -52,6 +52,8 @@ fn get_float_op(op: &str, numbers: (f64, f64)) -> Result<Object, String> {
         ">" => Ok(Object::Bool(l > r)),
         "<" => Ok(Object::Bool(l < r)),
         "==" => Ok(Object::Bool(l == r)),
+        "<>" => Ok(Object::Bool(l != r)),
+        "!=" => Ok(Object::Bool(l != r)),
         ">=" => Ok(Object::Bool(l >= r)),
         "<=" => Ok(Object::Bool(l <= r)),
         "^" => Ok(Object::Float(l.powf(r))),
@@ -69,6 +71,8 @@ fn get_int_op(op: &str, numbers: (i64, i64)) -> Result<Object, String> {
         "/" => Ok(Object::Integer(l / r)),
         ">" => Ok(Object::Bool(l > r)),
         "<" => Ok(Object::Bool(l < r)),
+        "<>" => Ok(Object::Bool(l != r)),
+        "!=" => Ok(Object::Bool(l != r)),
         "==" => Ok(Object::Bool(l == r)),
         ">=" => Ok(Object::Bool(l >= r)),
         "<=" => Ok(Object::Bool(l <= r)),
@@ -498,7 +502,7 @@ pub fn eval_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     }
 
     let head = &list[0];
-    let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<="];
+    let operators = ["+", "-", "*", "/", "<", ">", "=", "!=", "^", ">=", "<=", "<>", "!="];
     let str_op = ["concat"];
     match head {
         Object::Keyword(k) => eval_keyword(k, list, env),
